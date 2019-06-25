@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link rel="stylesheet" href="https://bootswatch.com/4/cyborg/bootstrap.min.css">
+	<title>postMessage+addEventListener</title>
+</head>
+
+<body>
+	<style>
+		body {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.container>h1 {
+			text-align: center;
+		}
+
+		iframe {
+			height: 300px;
+		}
+	</style>
+	<script>
+		// API Interface
+		function authorize(appName) {
+			return new Promise(resolve => {
+				if (window.confirm(`${appName} Apply obtain your user information.`)) {
+					resolve(true);
+				} else {
+					resolve(false);
+				}
+			});
+		}
+
+		// Listen the API calling request from the sub-window (iframe)
+		window.addEventListener('message', async ({
+			data,
+			source
+		}) => {
+			if (data.hasOwnProperty('rcEmbeddedSdk') &&
+				data.rcEmbeddedSdk.action === 'getUserInfo') {
+				const {
+					appName
+				} = data.rcEmbeddedSdk.payload;
+				const result = await authorize(appName);
+
+				if (result) {
+					source.postMessage({
+						rcEmbeddedSdk: {
+							action: 'getUserInfo',
+							payload: {
+								user: {
+									username: 'lolimay',
+									avatarUrl: 'https://avatars3.githubusercontent.com/u/32427260?s=460&v=4'
+								}
+							},
+							success: true
+						}
+					}, '*');
+				} else {
+					source.postMessage({
+						rcEmbeddedSdk: {
+							action: 'getUserInfo',
+							success: false
+						}
+					}, '*');
+				}
+			}
+		});
+	</script>
+	<iframe src="/iframe.html">
+</body>
+
+</html>
